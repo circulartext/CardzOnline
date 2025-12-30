@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Head from "next/head";
+import USMap from "../components/USMap";
 
-// ALL 50 US States
 const STATES = [
   { name: "Alabama", code: "AL" },
   { name: "Alaska", code: "AK" },
@@ -59,6 +59,7 @@ export default function Home() {
   const [selectedState, setSelectedState] = useState("TX");
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -70,6 +71,10 @@ export default function Home() {
       })
       .catch(() => setLoading(false));
   }, [selectedState]);
+
+  const filteredStates = STATES.filter(state =>
+    state.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <>
@@ -85,28 +90,34 @@ export default function Home() {
             padding: "20px",
             borderRight: "1px solid #ddd",
             overflowY: "auto",
-            height: "100vh"
+            height: "100vh",
+            backgroundColor: "#f8f9fa"
           }}
         >
-          <h2>States</h2>
+          <h2 style={{ color: "#333" }}>States</h2>
           <input
             placeholder="Search states..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
             style={{
               padding: "8px",
               width: "100%",
-              marginBottom: "10px"
+              marginBottom: "15px",
+              borderRadius: "4px",
+              border: "1px solid #ccc"
             }}
           />
-          {STATES.map(state => (
+          {filteredStates.map(state => (
             <div
               key={state.code}
               onClick={() => setSelectedState(state.code)}
               style={{
                 cursor: "pointer",
                 padding: "8px 0",
-                fontWeight:
-                  selectedState === state.code ? "bold" : "normal",
-                color: selectedState === state.code ? "#0070f3" : "#000"
+                fontWeight: selectedState === state.code ? "bold" : "normal",
+                color: selectedState === state.code ? "#0070f3" : "#333",
+                borderBottom: "1px solid #eee",
+                transition: "all 0.2s"
               }}
             >
               {state.name}
@@ -116,59 +127,100 @@ export default function Home() {
 
         {/* Main content */}
         <main style={{ flex: 1, padding: "20px" }}>
-          <h1>🃏 Card Events USA</h1>
-          <h3>Events in {selectedState}</h3>
+          <header style={{ marginBottom: "20px" }}>
+            <h1 style={{ color: "#0070f3" }}>🃏 Card Events USA</h1>
+            <p>Find sports card shows, Pokémon events, and TCG tournaments across the United States</p>
+          </header>
 
           <div style={{
             marginBottom: "20px",
-            padding: "10px",
-            background: "#f0f0f0",
-            borderRadius: "8px"
+            padding: "15px",
+            background: "linear-gradient(to right, #0070f3, #00a8ff)",
+            borderRadius: "8px",
+            color: "white"
           }}>
-            <h4>Click states on the left or map below</h4>
-          </div>
-
-          {/* USA SVG Map */}
-          <div style={{ textAlign: "center", margin: "20px 0" }}>
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Blank_US_Map_borders.svg/1024px-Blank_US_Map_borders.svg.png"
-              alt="USA Map"
-              style={{
-                width: "600px",
-                maxWidth: "90%",
-                border: "1px solid #ccc",
-                borderRadius: "8px"
-              }}
-            />
-            <p style={{ color: "#666", fontSize: "14px" }}>
-              Interactive map coming soon — currently shows states only.
+            <h3 style={{ margin: 0 }}>
+              Selected State: <span style={{ fontWeight: "bold" }}>{selectedState}</span>
+            </h3>
+            <p style={{ margin: "5px 0 0 0", fontSize: "14px" }}>
+              Click a state on the map or in the sidebar to see events
             </p>
           </div>
 
-          {/* Events */}
-          {loading && <p>Loading events...</p>}
-          {!loading && events.length === 0 && (
-            <p>No events found. Try Texas or California.</p>
-          )}
+          {/* Interactive Map */}
+          <div style={{
+            margin: "20px 0",
+            padding: "15px",
+            backgroundColor: "white",
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+          }}>
+            <h3 style={{ marginTop: 0 }}>USA Map</h3>
+            <USMap selectedState={selectedState} onSelectState={setSelectedState} />
+          </div>
 
-          {events.map(event => (
-            <div
-              key={event.id}
-              style={{
-                border: "1px solid #ddd",
-                padding: "12px",
-                borderRadius: "6px",
-                marginBottom: "10px"
-              }}
-            >
-              <h3>{event.name?.text}</h3>
-              <p>📍 {event.venue?.address?.localized_address_display}</p>
-              <p>📅 {event.start?.local}</p>
-              <a href={event.url} target="_blank">
-                View Event
-              </a>
-            </div>
-          ))}
+          {/* Events Section */}
+          <div style={{
+            margin: "20px 0",
+            padding: "15px",
+            backgroundColor: "white",
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+          }}>
+            <h3 style={{ marginTop: 0 }}>
+              Events in {STATES.find(s => s.code === selectedState)?.name}
+            </h3>
+
+            {loading && (
+              <p style={{ textAlign: "center", color: "#666" }}>
+                Loading events...
+              </p>
+            )}
+
+            {!loading && events.length === 0 && (
+              <p style={{ textAlign: "center", color: "#666" }}>
+                No events found for this state. Try Texas or California.
+              </p>
+            )}
+
+            {events.map(event => (
+              <div
+                key={event.id}
+                style={{
+                  border: "1px solid #eaeaea",
+                  padding: "15px",
+                  borderRadius: "6px",
+                  marginBottom: "10px",
+                  backgroundColor: "#fafafa"
+                }}
+              >
+                <h4 style={{ margin: "0 0 8px 0", color: "#333" }}>
+                  {event.name?.text}
+                </h4>
+                <p style={{ margin: "4px 0", color: "#555" }}>
+                  📍 {event.venue?.address?.localized_address_display || "Location TBA"}
+                </p>
+                <p style={{ margin: "4px 0", color: "#555" }}>
+                  📅 {event.start?.local ? new Date(event.start.local).toLocaleDateString() : "Date TBA"}
+                </p>
+                <a
+                  href={event.url}
+                  target="_blank"
+                  style={{
+                    display: "inline-block",
+                    padding: "8px 12px",
+                    backgroundColor: "#0070f3",
+                    color: "white",
+                    borderRadius: "4px",
+                    textDecoration: "none",
+                    marginTop: "8px"
+                  }}
+                >
+                  View Event Details
+                </a>
+              </div>
+            ))}
+          </div>
         </main>
       </div>
     </>
